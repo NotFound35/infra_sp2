@@ -1,85 +1,106 @@
-# YaMDb
-Бэкенд API проекта YaMDb (ресурс для публикации отзывов к произведениям 
-искусства и формирования их рейтинга)
+# Запуск docker-compose. Проект YaMDb
 
-##### Технологии
-- Python 3
-- Django 3.2
-- Django REST Framework 3.12
-##### Как запустить проект:
+Яндекс Практикум. Проект 15-го спринта: запуск docker-compose.
 
-Клонировать репозиторий и перейти в него в командной строке:
+## Описание
 
-```
-git clone git@github.com:grmzk/api_yamdb.git
-```
+Проект `YaMDb` собирает отзывы пользователей на произведения из категорий: «Книги», «Фильмы», «Музыка».
 
-```
-cd api_yamdb/
-```
+## Функционал
 
-Cоздать и активировать виртуальное окружение:
+- Произведения делятся на категории. Список категорий может быть расширен администратором;
+- Произведения, фильмы и музыка не хранятся в приложении;
+- В каждой категории есть произведения: книги, фильмы или музыка;
+- Произведению может быть присвоен жанр из списка предустановленных. Новые жанры может создавать только администратор;
+- Пользователи могут оставлять отзывы и ставить оценку произведениям. Из пользовательских оценок формируется рейтинг. На одно произведение можно оставить только один отзыв.
 
-```
-python3 -m venv venv
-```
+## Установка
 
-```
-source venv/bin/activate
-```
+1. Проверить наличие Docker
 
-Установить зависимости из файла requirements.txt:
+   Прежде чем приступать к работе, убедиться что Docker установлен, для этого ввести команду:
 
-```
-python3 -m pip install --upgrade pip
-```
+   ```bash
+   docker -v
+   ```
 
-```
-pip install -r requirements.txt
-```
+   В случае отсутствия, скачать [Docker Desktop](https://www.docker.com/products/docker-desktop) для Mac или Windows. [Docker Compose](https://docs.docker.com/compose) будет установлен автоматически.
 
-Выполнить миграции:
 
-```
-python3 manage.py migrate
-```
+2. Клонировать репозиторий на локальный компьютер
 
-Запустить проект:
+   ```bash
+   git clone https://github.com/NotFound35/infra_sp2.git
+   ```
 
-```
-python3 manage.py runserver
-```
+3. В корневой директории создать файл `.env`, согласно примеру:
 
-##### Эндпоинты
+   ```bash
+   DB_ENGINE=django.db.backends.postgresql
+   DB_NAME=postgres
+   POSTGRES_USER=postgres
+   POSTGRES_PASSWORD=postgres
+   DB_HOST=db
+   DB_PORT=5432
+   ```
 
-Получить список всех произведений искусства:
-```
-GET /api/v1/titles/
-```
+4. Запустить `docker-compose`
 
-Получить конкретную произведение по id:
-```
-GET /api/v1/titles/{id}/
-```
+   Выполнить из корневой директории команду:
 
-Добавление отзыва к произведению:
-```
-JSON в теле запроса
-{
-    "text": "string",
-    "score": "integer"
-}
+   ```bash
+   docker-compose up -d
+   ```
 
-POST /api/v1/titles/{title_id}/reviews/
-```
+5. Заполнить БД
 
-Полный список эндпоинтов:
-```
-http://127.0.0.1:8000/redoc/
-```
+   Создать и выполнить миграции:
 
-##### Авторы
-- Игорь Музыка [mailto:igor@mail.fake]
-- Денис Попченко [mailto:denis@mail.fake]
-- Александр Романов [mailto:alex@mail.fake]
-- Yandex LLC
+   ```bash
+   docker-compose exec web python manage.py makemigrations --noinput
+   docker-compose exec web python manage.py migrate --noinput
+   ```
+
+6. Подгрузить статику
+
+   ```bash
+   docker-compose exec web python manage.py collectstatic --no-input
+   ```
+
+7. Заполнить БД тестовыми данными
+
+   Для заполнения базы использовать файл `fixtures.json`, в директории `infra_sp2`. Выполните команду:
+
+   ```bash
+   docker-compose exec web python manage.py loaddata fixtures.json
+   ```
+
+8. Создать суперпользователя
+
+   ```bash
+   docker-compose exec web python manage.py createsuperuser
+   ```
+
+9. Остановить работу всех контейнеров
+
+   ```bash
+   docker-compose down
+   ```
+
+10. Пересобрать и запустить контейнеры
+
+    ```bash
+    docker-compose up -d --build
+    ```
+
+11. Мониторинг запущенных контейнеров
+
+    ```bash
+    docker stats
+    ```
+
+12. Остановить и удалить контейнеры, тома и образы
+
+    ```bash
+    docker-compose down -v
+    ```
